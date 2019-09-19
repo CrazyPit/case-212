@@ -4,8 +4,11 @@ import os
 import re
 
 
+class InvalidFileFormatException(Exception):
+    pass
+
 def load_signed():
-    signed = []
+    signed = set()
     pattern1 = re.compile(r'([^|]+)\|([^|]+)$')
     pattern2 = re.compile(r'\s*\|([^|]+)\|([^|]+)\|\s*$')
 
@@ -19,13 +22,16 @@ def load_signed():
         with open(filename) as inp:
             for i, line in enumerate(inp):
                 line = line.strip()
+                if not line:
+                    continue
                 m = re.match(pattern1, line) or re.match(pattern2, line)
                 if not m and line:
-                    print('File "%s", line %d: line does not follow the format:\n\t"%s"'
-                        % (filename, i + 1, line))
-                    continue
+                    raise InvalidFileFormatException(
+                        'File "%s", line %d: line does not follow the format:\n\t"%s"'
+                        % (filename, i + 1, line)
+                    )
 
-                signed.append((m.group(1).strip(), m.group(2).strip()))
+                signed.add((m.group(1).strip(), m.group(2).strip()))
     return signed
 
 
